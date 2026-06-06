@@ -1,0 +1,14 @@
+Created empty files and dir
+=> app
+
+=>docs
+
+=>README.md
+
+=>nginx
+
+=>Dockerfile
+
+=>docker-copose.yml
+
+
