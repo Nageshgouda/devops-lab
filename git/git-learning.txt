@@ -1,0 +1,5 @@
+Git Learning - Day 1
+
+Working Directory
+Staging Area
+Repository
