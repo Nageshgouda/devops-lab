@@ -24,3 +24,19 @@ jobs:
 
       - name: Build frontend image
         run: docker build -t devops-app:test .
+ 
+      - name: Start application
+        run: docker compose up -d
+
+      - name: Wait for backend
+        run: sleep 10
+
+      - name: Test frontend
+        run: curl -f http://localhost:8081
+
+      - name: Test backend API
+        run: curl -f http://localhost:8081/api/
+
+      - name: Stop application
+        if: always()
+        run: docker compose down

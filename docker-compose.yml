@@ -1,6 +1,6 @@
 services:
   devops-app:
-    image: devops-lab:v3
+    image: ${FRONTEND_IMAGE:-devops-lab:v3}
     container_name: devops-app-compose
     ports:
       - "8081:80"
@@ -9,7 +9,7 @@ services:
         condition: service_healthy
 
   backend:
-    image: devops-backend:v2
+    image: ${BACKEND_IMAGE:-devops-backend:v2}
     container_name: devops-backend-compose
     env_file:
       - .env
