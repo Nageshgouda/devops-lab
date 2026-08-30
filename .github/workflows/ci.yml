@@ -25,6 +25,11 @@ jobs:
       - name: Build frontend image
         run: docker build -t devops-app:test .
  
+      - name: Create CI environment file
+        run: |
+          echo "APP_MESSAGE=Hello from CI" > .env
+          echo "APP_PORT=5000" >> .env
+
       - name: Start application
         run: |
           BACKEND_IMAGE=devops-backend:test \
