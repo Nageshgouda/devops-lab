@@ -26,10 +26,24 @@ jobs:
         run: docker build -t devops-app:test .
  
       - name: Start application
-        run: docker compose up -d
+        run: |
+          BACKEND_IMAGE=devops-backend:test \
+          FRONTEND_IMAGE=devops-app:test \
+          docker compose up -d
 
       - name: Wait for backend
-        run: sleep 10
+        run: |
+          for i in {1..30}; do
+            if docker inspect --format '{{.State.Health.Status}}' devops-backend-compose | grep -q healthy; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+            echo "Waiting for backend..."
+            sleep 2
+          done
+          echo "Backend did not become healthy"
+          docker compose logs backend
+          exit 1
 
       - name: Test frontend
         run: curl -f http://localhost:8081
