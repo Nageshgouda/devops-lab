@@ -25,6 +25,11 @@ jobs:
       - name: Build frontend image
         run: docker build -t devops-app:test .
  
+      - name: Tag images
+        run: |
+          docker tag devops-backend:test nageshsm81/devops-backend:v1
+          docker tag devops-app:test nageshsm81/devops-app:v1
+
       - name: Create CI environment file
         run: |
           echo "APP_MESSAGE=Hello from CI" > .env
@@ -61,6 +66,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push images
+        run: |
+          docker push nageshsm81/devops-backend:v1
+          docker push nageshsm81/devops-app:v1
 
       - name: Stop application
         if: always()
