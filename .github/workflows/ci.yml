@@ -77,3 +77,15 @@ jobs:
       - name: Stop application
         if: always()
         run: docker compose down
+
+
+  runner-test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Test Rocky Linux runner
+        run: |
+          echo "Hello from Rocky Linux self-hosted runner"
+          hostname
+          whoami
+          docker version
