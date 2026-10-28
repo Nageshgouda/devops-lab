@@ -79,6 +79,7 @@ jobs:
         run: docker compose down
 
 
+
   runner-test:
     runs-on: self-hosted
 
@@ -89,3 +90,20 @@ jobs:
           hostname
           whoami
           docker version
+
+      - name: Test Docker Hub CD access
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_CD_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_CD_TOKEN }}
+        run: |
+          export DOCKER_CONFIG="$(mktemp -d)"
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login \
+            --username "$DOCKERHUB_USERNAME" \
+            --password-stdin
+
+          docker pull nageshsm81/devops-app:050a807
+          docker pull nageshsm81/devops-backend:050a807
+
+          docker logout
