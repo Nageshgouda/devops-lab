@@ -137,5 +137,5 @@ jobs:
             sleep 2
           done
 
-          curl --retry 5 --retry-delay 2 --retry-connrefused -f http://localhost:8081/
-          curl --retry 5 --retry-delay 2 --retry-connrefused -f http://localhost:8081/api/
+          curl --retry 5 --retry-all-errors --retry-delay 2 -f http://127.0.0.1:8081/
+          curl --retry 5 --retry-all-errors --retry-delay 2 -f http://127.0.0.1:8081/api/
