@@ -24,7 +24,7 @@ jobs:
 
       - name: Build frontend image
         run: docker build -t devops-app:test .
- 
+
       - name: Tag images
         run: |
           IMAGE_TAG=${GITHUB_SHA::7}
@@ -80,18 +80,16 @@ jobs:
 
 
 
-  runner-test:
+
+  deploy:
     runs-on: self-hosted
+    needs: test
 
     steps:
-      - name: Test Rocky Linux runner
-        run: |
-          echo "Hello from Rocky Linux self-hosted runner"
-          hostname
-          whoami
-          docker version
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Test Docker Hub CD access
+      - name: Pull tested images from Docker Hub
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_CD_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_CD_TOKEN }}
@@ -99,11 +97,45 @@ jobs:
           export DOCKER_CONFIG="$(mktemp -d)"
           trap 'rm -rf "$DOCKER_CONFIG"' EXIT
 
+          IMAGE_TAG="${GITHUB_SHA::7}"
+
           printf '%s' "$DOCKERHUB_TOKEN" | docker login \
             --username "$DOCKERHUB_USERNAME" \
             --password-stdin
 
-          docker pull nageshsm81/devops-app:050a807
-          docker pull nageshsm81/devops-backend:050a807
+          docker pull "nageshsm81/devops-app:${IMAGE_TAG}"
+          docker pull "nageshsm81/devops-backend:${IMAGE_TAG}"
 
-          docker logout
+      - name: Configure application
+        run: |
+          printf '%s\n' \
+            'APP_MESSAGE=Hello from .env' \
+            'APP_PORT=5000' > .env
+
+      - name: Deploy application
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::7}"
+
+          FRONTEND_IMAGE="nageshsm81/devops-app:${IMAGE_TAG}" \
+          BACKEND_IMAGE="nageshsm81/devops-backend:${IMAGE_TAG}" \
+          docker compose up -d
+
+      - name: Verify deployment
+        run: |
+          for i in {1..30}; do
+            if docker inspect --format '{{.State.Health.Status}}' devops-backend-compose 2>/dev/null | grep -q healthy; then
+              echo "Backend is healthy"
+              break
+            fi
+
+            if [ "$i" -eq 30 ]; then
+              echo "Backend failed health check"
+              docker compose logs backend
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f http://localhost:8081/
+          curl --retry 5 --retry-delay 2 --retry-connrefused -f http://localhost:8081/api/
